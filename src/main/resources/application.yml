@@ -40,25 +40,29 @@ spring:
             redis-rate-limiter.replenishRate: 20
             redis-rate-limiter.burstCapacity: 40
             redis-rate-limiter.requestedTokens: 1
+            key-resolver: "#{@ipKeyResolver}"
+            deny-empty-key: false
 
       routes:
 
         # ─────────────────────────────────────────
         # AUTH SERVICE  →  https://authservice-ano4.onrender.com
         # Endpoints públicos (sin JWT)
-        # POST /auth/register
-        # POST /auth/login
-        # POST /auth/refresh
-        # POST /auth/logout/{userId}
-        # POST /auth/validate-token
-        # GET  /auth/health
+        # POST /api/auth/register
+        # POST /api/auth/login
+        # POST /api/auth/refresh
+        # POST /api/auth/logout/{userId}
+        # POST /api/auth/validate-token
+        # GET  /api/auth/health
         # ─────────────────────────────────────────
+        # NOTA: El controlador usa @RequestMapping("/api/auth"), por lo que
+        # NO se aplica StripPrefix — la ruta se reenvía tal cual.
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:https://authservice-ano4.onrender.com}
           predicates:
             - Path=/api/auth/**
           filters:
-            - StripPrefix=1
+            # Sin StripPrefix — el auth service espera /api/auth/**
             # Sin AuthenticationFilter — rutas públicas
 
         # ─────────────────────────────────────────
