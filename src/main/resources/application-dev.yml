@@ -1,0 +1,80 @@
+# Perfil de desarrollo local — sobreescribe las URIs de producción
+# Ejecutar con: mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+spring:
+  cloud:
+    gateway:
+      # Disable circuit-breaker and rate-limiter globally in dev for easier debugging
+      default-filters:
+        - name: CircuitBreaker
+          args:
+            name: defaultCircuitBreaker
+            fallbackUri: forward:/fallback
+
+      routes:
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+
+        - id: user-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - AuthenticationFilter
+
+        - id: course-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/courses/**
+          filters:
+            - RewritePath=/api/courses/(?<segment>.*), /api/v1/courses/${segment}
+            - AuthenticationFilter
+
+        - id: exam-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/exams/**
+          filters:
+            - StripPrefix=1
+            - AuthenticationFilter
+
+        - id: matching-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/matching/**
+          filters:
+            - StripPrefix=1
+            - AuthenticationFilter
+
+        - id: chat-service-rest
+          uri: http://localhost:8086
+          predicates:
+            - Path=/api/chat/**
+          filters:
+            - RewritePath=/api/chat/(?<segment>.*), /${segment}
+            - AuthenticationFilter
+
+        - id: chat-service-websocket
+          uri: ws://localhost:8086
+          predicates:
+            - Path=/socket.io/**
+          filters:
+            - AuthenticationFilter
+
+        - id: analytics-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/analytics/**
+          filters:
+            - RewritePath=/api/analytics/(?<segment>.*), /${segment}
+            - AuthenticationFilter
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.studyconnect.gateway: DEBUG

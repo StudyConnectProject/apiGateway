@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  api-gateway:
+    build: .
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
+    networks:
+      - studyconnect-net
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - studyconnect-net
+
+networks:
+  studyconnect-net:
+    driver: bridge

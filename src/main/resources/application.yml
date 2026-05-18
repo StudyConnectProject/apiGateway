@@ -1,0 +1,261 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+
+  # Redis para Rate Limiting
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  cloud:
+    gateway:
+      # CORS global
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      # Filtros globales por defecto
+      default-filters:
+        - name: CircuitBreaker
+          args:
+            name: defaultCircuitBreaker
+            fallbackUri: forward:/fallback
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 20
+            redis-rate-limiter.burstCapacity: 40
+            redis-rate-limiter.requestedTokens: 1
+
+      routes:
+
+        # ─────────────────────────────────────────
+        # AUTH SERVICE  →  https://authservice-ano4.onrender.com
+        # Endpoints públicos (sin JWT)
+        # POST /auth/register
+        # POST /auth/login
+        # POST /auth/refresh
+        # POST /auth/logout/{userId}
+        # POST /auth/validate-token
+        # GET  /auth/health
+        # ─────────────────────────────────────────
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:https://authservice-ano4.onrender.com}
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+            # Sin AuthenticationFilter — rutas públicas
+
+        # ─────────────────────────────────────────
+        # USER SERVICE  →  https://userservice-829g.onrender.com
+        # GET    /users/search
+        # GET    /users/me
+        # PUT    /users/me
+        # GET    /users/
+        # GET    /users/:id
+        # POST   /users/
+        # PUT    /users/:id
+        # DELETE /users/:id
+        # PATCH  /users/:id/role
+        # PATCH  /users/:id/status
+        # GET    /users/:id/courses
+        # GET    /users/:id/matches
+        # ─────────────────────────────────────────
+        - id: user-service
+          uri: ${USER_SERVICE_URL:https://userservice-829g.onrender.com}
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - AuthenticationFilter
+
+        # ─────────────────────────────────────────
+        # COURSE SERVICE  →  https://courseservice-0n2q.onrender.com
+        # API versioned under /api/v1/courses
+        # POST   /courses
+        # GET    /courses/search
+        # GET    /courses/my-enrollments
+        # GET    /courses
+        # GET    /courses/{id}
+        # PUT    /courses/{id}
+        # DELETE /courses/{id}
+        # PATCH  /courses/{id}/status
+        # POST   /courses/{id}/enroll
+        # DELETE /courses/{id}/enroll
+        # GET    /courses/{id}/students
+        # GET    /courses/{id}/tutor
+        # POST   /courses/{id}/students
+        # DELETE /courses/{id}/students/{studentId}
+        # POST   /courses/{id}/resources
+        # GET    /courses/{id}/resources
+        # DELETE /courses/{id}/resources/{resourceId}
+        # ─────────────────────────────────────────
+        - id: course-service
+          uri: ${COURSE_SERVICE_URL:https://courseservice-0n2q.onrender.com}
+          predicates:
+            - Path=/api/courses/**
+          filters:
+            - RewritePath=/api/courses/(?<segment>.*), /api/v1/courses/${segment}
+            - AuthenticationFilter
+
+        # ─────────────────────────────────────────
+        # EXAM SERVICE  →  https://examservice-6p78.onrender.com
+        # GET    /exams/attempts/student/:studentId
+        # GET    /exams/attempts/:attemptId
+        # POST   /exams/
+        # GET    /exams/
+        # GET    /exams/:id
+        # PUT    /exams/:id
+        # DELETE /exams/:id
+        # PATCH  /exams/:id/status
+        # POST   /exams/:id/questions
+        # PUT    /exams/:id/questions/:qId
+        # DELETE /exams/:id/questions/:qId
+        # GET    /exams/:id/take
+        # POST   /exams/:id/attempts
+        # GET    /exams/:id/attempts
+        # ─────────────────────────────────────────
+        - id: exam-service
+          uri: ${EXAM_SERVICE_URL:https://examservice-6p78.onrender.com}
+          predicates:
+            - Path=/api/exams/**
+          filters:
+            - StripPrefix=1
+            - AuthenticationFilter
+
+        # ─────────────────────────────────────────
+        # MATCHING SERVICE  →  https://matchingservice.onrender.com
+        # POST   /matching/request
+        # GET    /matching/
+        # GET    /matching/{id}
+        # PUT    /matching/{id}
+        # DELETE /matching/{id}
+        # PATCH  /matching/{id}/status
+        # POST   /matching/{id}/accept
+        # POST   /matching/{id}/reject
+        # POST   /matching/{id}/offer
+        # GET    /matching/{userId}/matches
+        # GET    /matching/recommendations/{userId}
+        # POST   /matching/process
+        # ─────────────────────────────────────────
+        - id: matching-service
+          uri: ${MATCHING_SERVICE_URL:https://matchingservice.onrender.com}
+          predicates:
+            - Path=/api/matching/**
+          filters:
+            - StripPrefix=1
+            - AuthenticationFilter
+
+        # ─────────────────────────────────────────
+        # CHAT SERVICE  →  https://chatservice-l7qc.onrender.com
+        # REST:
+        # GET    /conversations/unread-count
+        # POST   /conversations/
+        # GET    /conversations/
+        # GET    /conversations/:id
+        # PATCH  /conversations/:id
+        # POST   /conversations/:id/read-receipts
+        # GET    /conversations/:id/participants
+        # POST   /conversations/:id/participants
+        # DELETE /conversations/:id/participants/:userId
+        # GET    /conversations/:id/messages
+        # POST   /conversations/:id/messages
+        # GET    /conversations/messages/:messageId
+        # DELETE /conversations/messages/:messageId
+        # PUT    /conversations/messages/:messageId/reactions/:emoji
+        # DELETE /conversations/messages/:messageId/reactions/:emoji
+        # WebSocket: Socket.IO over /socket.io
+        # ─────────────────────────────────────────
+        - id: chat-service-rest
+          uri: ${CHAT_SERVICE_URL:https://chatservice-l7qc.onrender.com}
+          predicates:
+            - Path=/api/chat/**
+          filters:
+            - RewritePath=/api/chat/(?<segment>.*), /${segment}
+            - AuthenticationFilter
+
+        - id: chat-service-websocket
+          uri: ${CHAT_SERVICE_WS_URL:wss://chatservice-l7qc.onrender.com}
+          predicates:
+            - Path=/socket.io/**
+          filters:
+            - AuthenticationFilter
+          metadata:
+            connect-timeout: 10000
+            response-timeout: 0
+
+        # ─────────────────────────────────────────
+        # ANALYTICS SERVICE  →  https://backend-analytics-4xq4.onrender.com
+        # GET    /events/
+        # POST   /events/
+        # GET    /events/user-activity/:userId
+        # GET    /events/:id
+        # DELETE /events/:id
+        # GET    /reports/active-users
+        # GET    /reports/popular-courses
+        # GET    /reports/top-tutors
+        # GET    /reports/system-metrics
+        # GET    /reports/peak-hours
+        # GET    /reports/date-range
+        # ─────────────────────────────────────────
+        - id: analytics-service
+          uri: ${ANALYTICS_SERVICE_URL:https://backend-analytics-4xq4.onrender.com}
+          predicates:
+            - Path=/api/analytics/**
+          filters:
+            - RewritePath=/api/analytics/(?<segment>.*), /${segment}
+            - AuthenticationFilter
+
+# Seguridad JWT
+app:
+  jwt:
+    secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly12345}
+    expiration: 86400000
+
+# Resilience4j Circuit Breaker
+resilience4j:
+  circuitbreaker:
+    instances:
+      defaultCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+  timelimiter:
+    instances:
+      defaultCircuitBreaker:
+        timeoutDuration: 10s
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway, metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    com.studyconnect.gateway: DEBUG
