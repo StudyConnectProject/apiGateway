@@ -5,8 +5,8 @@ target/
 *.war
 *.ear
 
-# Maven wrapper properties (keep the jar, ignore downloaded binary)
-.mvn/wrapper/maven-wrapper.properties
+# Maven wrapper properties
+!.mvn/wrapper/maven-wrapper.properties
 
 # IntelliJ IDEA
 .idea/
