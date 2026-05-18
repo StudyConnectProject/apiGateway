@@ -41,7 +41,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             "/fallback"
     );
 
-    @Value("${app.jwt.secret:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly12345}")
+    @Value("${jwt.secret:mySecretKeyForJWTTokenGenerationAndValidationPurposeOnly12345}")
     private String jwtSecret;
 
     public AuthenticationFilter() {
