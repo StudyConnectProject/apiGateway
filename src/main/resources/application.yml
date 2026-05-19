@@ -5,12 +5,6 @@ spring:
   application:
     name: api-gateway
 
-  # Redis para Rate Limiting
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
   cloud:
     gateway:
       # CORS global
@@ -38,13 +32,6 @@ spring:
           args:
             name: defaultCircuitBreaker
             fallbackUri: forward:/fallback
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter.replenishRate: 20
-            redis-rate-limiter.burstCapacity: 40
-            redis-rate-limiter.requestedTokens: 1
-            key-resolver: "#{@ipKeyResolver}"
-            deny-empty-key: false
 
       routes:
 
