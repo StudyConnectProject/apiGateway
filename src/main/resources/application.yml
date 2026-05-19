@@ -219,6 +219,27 @@ spring:
             response-timeout: 0
 
         # ─────────────────────────────────────────
+        # AI AGENT SERVICE  →  https://agente-ia-2gzx.onrender.com
+        # POST   /chat
+        # GET    /history
+        # DELETE /history
+        # POST   /rate
+        # GET    /sessions
+        # GET    /health
+        # ─────────────────────────────────────────
+        - id: agent-service
+          uri: ${AGENT_SERVICE_URL:https://agente-ia-2gzx.onrender.com}
+          predicates:
+            - Path=/api/agent/**
+          filters:
+            - RewritePath=/api/agent/(?<segment>.*), /${segment}
+            - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: agentServiceCB
+                fallbackUri: forward:/fallback
+
+        # ─────────────────────────────────────────
         # ANALYTICS SERVICE  →  https://backend-analytics-4xq4.onrender.com
         # GET    /events/
         # POST   /events/
@@ -280,6 +301,8 @@ resilience4j:
         baseConfig: default
       analyticsServiceCB:
         baseConfig: default
+      agentServiceCB:
+        baseConfig: default
   timelimiter:
     configs:
       default:
@@ -300,6 +323,9 @@ resilience4j:
         baseConfig: default
       analyticsServiceCB:
         baseConfig: default
+      agentServiceCB:
+        timeoutDuration: 60s
+        cancelRunningFuture: true
 
 # Actuator
 management:
