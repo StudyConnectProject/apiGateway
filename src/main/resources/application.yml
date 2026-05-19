@@ -112,7 +112,7 @@ spring:
           predicates:
             - Path=/api/courses, /api/courses/**
           filters:
-            - RewritePath=/api/courses/?(?<segment>.*), /api/v1/courses/${segment}
+            - RewritePath=/api/courses(?<segment>.*), /api/v1/courses${segment}
             - AuthenticationFilter
             - name: CircuitBreaker
               args:
