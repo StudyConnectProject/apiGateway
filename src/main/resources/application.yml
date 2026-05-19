@@ -49,7 +49,7 @@ spring:
       routes:
 
         # ─────────────────────────────────────────
-        # AUTH SERVICE  →  https://authservice-ano4.onrender.com
+        # AUTH SERVICE  →  https://authservice-lzwi.onrender.com
         # Endpoints públicos (sin JWT)
         # POST /api/auth/register
         # POST /api/auth/login
@@ -61,7 +61,7 @@ spring:
         # NOTA: El controlador usa @RequestMapping("/api/auth"), por lo que
         # NO se aplica StripPrefix — la ruta se reenvía tal cual.
         - id: auth-service
-          uri: ${AUTH_SERVICE_URL:https://authservice-ano4.onrender.com}
+          uri: ${AUTH_SERVICE_URL:https://authservice-lzwi.onrender.com}
           predicates:
             - Path=/api/auth/**
           # Sin filtros adicionales — sin StripPrefix (el auth service espera /api/auth/**)

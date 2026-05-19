@@ -7,7 +7,7 @@ Construido con **Spring Cloud Gateway 2023.0.1** + **Spring Boot 3.2.5** + **Jav
 
 ## Endpoints mapeados por servicio
 
-### Auth Service → `https://authservice-ano4.onrender.com`
+### Auth Service → `https://authservice-lzwi.onrender.com`
 Gateway prefix: `/api/auth/**` (sin JWT requerido)
 
 | Método | Ruta Gateway              | Ruta Downstream          | Auth | Descripción                      |
@@ -219,7 +219,7 @@ docker compose up --build
 |-----------------------|--------------------------------------------------------|-----------------------------------------|
 | `SERVER_PORT`         | `8080`                                                 | Puerto del gateway                      |
 | `JWT_SECRET`          | _mismo secret que authservice_                         | Clave HMAC-SHA256 para validar JWTs     |
-| `AUTH_SERVICE_URL`    | `https://authservice-ano4.onrender.com`                | URL del Auth Service                    |
+| `AUTH_SERVICE_URL`    | `https://authservice-lzwi.onrender.com`                | URL del Auth Service                    |
 | `USER_SERVICE_URL`    | `https://userservice-829g.onrender.com`                | URL del User Service                    |
 | `COURSE_SERVICE_URL`  | `https://courseservice-0n2q.onrender.com`              | URL del Course Service                  |
 | `EXAM_SERVICE_URL`    | `https://examservice-6p78.onrender.com`                | URL del Exam Service                    |
