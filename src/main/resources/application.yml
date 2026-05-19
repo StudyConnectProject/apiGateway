@@ -211,8 +211,9 @@ spring:
           uri: ${CHAT_SERVICE_WS_URL:wss://chatservice-l7qc.onrender.com}
           predicates:
             - Path=/socket.io/**
-          filters:
-            - AuthenticationFilter
+          # No AuthenticationFilter here: WebSocket upgrade requests do not carry
+          # an Authorization header. The chat service validates the JWT itself
+          # inside its Socket.IO middleware (chatSocket.js io.use()).
           metadata:
             connect-timeout: 35000
             response-timeout: 0
