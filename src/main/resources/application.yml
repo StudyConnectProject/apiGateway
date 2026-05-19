@@ -110,9 +110,9 @@ spring:
         - id: course-service
           uri: ${COURSE_SERVICE_URL:https://courseservice-0n2q.onrender.com}
           predicates:
-            - Path=/api/courses/**
+            - Path=/api/courses, /api/courses/**
           filters:
-            - RewritePath=/api/courses/(?<segment>.*), /api/v1/courses/${segment}
+            - RewritePath=/api/courses/?(?<segment>.*), /api/v1/courses/${segment}
             - AuthenticationFilter
             - name: CircuitBreaker
               args:
