@@ -28,10 +28,7 @@ spring:
         # Eliminar Origin antes de reenviar al microservicio para evitar CORS headers duplicados
         # (el gateway ya gestiona CORS hacia el browser mediante globalcors)
         - RemoveRequestHeader=Origin
-        - name: CircuitBreaker
-          args:
-            name: defaultCircuitBreaker
-            fallbackUri: forward:/fallback
+        # NOTA: Circuit breakers aplicados por ruta para aislar fallos entre servicios
 
       routes:
 
@@ -51,7 +48,12 @@ spring:
           uri: ${AUTH_SERVICE_URL:https://authservice-lzwi.onrender.com}
           predicates:
             - Path=/api/auth/**
-          # Sin filtros adicionales — sin StripPrefix (el auth service espera /api/auth/**)
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authServiceCB
+                fallbackUri: forward:/fallback
+          # Sin StripPrefix (el auth service espera /api/auth/**)
           # y sin AuthenticationFilter (rutas públicas)
 
         # ─────────────────────────────────────────
@@ -76,6 +78,10 @@ spring:
           filters:
             - StripPrefix=1
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: userServiceCB
+                fallbackUri: forward:/fallback
 
         # ─────────────────────────────────────────
         # COURSE SERVICE  →  https://courseservice-0n2q.onrender.com
@@ -105,6 +111,10 @@ spring:
           filters:
             - RewritePath=/api/courses/(?<segment>.*), /api/v1/courses/${segment}
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: courseServiceCB
+                fallbackUri: forward:/fallback
 
         # ─────────────────────────────────────────
         # EXAM SERVICE  →  https://examservice-6p78.onrender.com
@@ -130,6 +140,10 @@ spring:
           filters:
             - StripPrefix=1
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: examServiceCB
+                fallbackUri: forward:/fallback
 
         # ─────────────────────────────────────────
         # MATCHING SERVICE  →  https://matchingservice.onrender.com
@@ -153,6 +167,10 @@ spring:
           filters:
             - StripPrefix=1
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: matchingServiceCB
+                fallbackUri: forward:/fallback
 
         # ─────────────────────────────────────────
         # CHAT SERVICE  →  https://chatservice-l7qc.onrender.com
@@ -181,6 +199,10 @@ spring:
           filters:
             - RewritePath=/api/chat/(?<segment>.*), /${segment}
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: chatServiceCB
+                fallbackUri: forward:/fallback
 
         - id: chat-service-websocket
           uri: ${CHAT_SERVICE_WS_URL:wss://chatservice-l7qc.onrender.com}
@@ -189,7 +211,7 @@ spring:
           filters:
             - AuthenticationFilter
           metadata:
-            connect-timeout: 10000
+            connect-timeout: 35000
             response-timeout: 0
 
         # ─────────────────────────────────────────
@@ -213,6 +235,10 @@ spring:
           filters:
             - RewritePath=/api/analytics/(?<segment>.*), /${segment}
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: analyticsServiceCB
+                fallbackUri: forward:/fallback
 
 # Seguridad JWT
 app:
@@ -221,22 +247,55 @@ app:
     expiration: 86400000
 
 # Resilience4j Circuit Breaker
+# Circuit breakers separados por servicio para evitar fallos en cascada.
+# Timeout de 35s para tolerar cold-starts en Render.com (free tier ~30s).
 resilience4j:
   circuitbreaker:
-    instances:
-      defaultCircuitBreaker:
+    configs:
+      default:
         registerHealthIndicator: true
         slidingWindowSize: 10
         minimumNumberOfCalls: 5
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
-        waitDurationInOpenState: 5s
-        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 60
         eventConsumerBufferSize: 10
-  timelimiter:
     instances:
-      defaultCircuitBreaker:
-        timeoutDuration: 10s
+      authServiceCB:
+        baseConfig: default
+      userServiceCB:
+        baseConfig: default
+      courseServiceCB:
+        baseConfig: default
+      examServiceCB:
+        baseConfig: default
+      matchingServiceCB:
+        baseConfig: default
+      chatServiceCB:
+        baseConfig: default
+      analyticsServiceCB:
+        baseConfig: default
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 35s
+        cancelRunningFuture: true
+    instances:
+      authServiceCB:
+        baseConfig: default
+      userServiceCB:
+        baseConfig: default
+      courseServiceCB:
+        baseConfig: default
+      examServiceCB:
+        baseConfig: default
+      matchingServiceCB:
+        baseConfig: default
+      chatServiceCB:
+        baseConfig: default
+      analyticsServiceCB:
+        baseConfig: default
 
 # Actuator
 management:
