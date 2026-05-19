@@ -25,9 +25,12 @@ spring:
 
       # Filtros globales por defecto
       default-filters:
-        # Eliminar Origin antes de reenviar al microservicio para evitar CORS headers duplicados
-        # (el gateway ya gestiona CORS hacia el browser mediante globalcors)
+        # Eliminar Origin antes de reenviar al microservicio para evitar que el servicio aguas abajo
+        # agregue su propio Access-Control-Allow-Origin (el gateway ya gestiona CORS via globalcors)
         - RemoveRequestHeader=Origin
+        # Si el servicio aguas abajo igual agrega cabeceras CORS (ej. Express cors() con wildcard),
+        # esto elimina duplicados y conserva el valor del gateway (el primero, con el origin específico)
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
         # NOTA: Circuit breakers aplicados por ruta para aislar fallos entre servicios
 
       routes:
