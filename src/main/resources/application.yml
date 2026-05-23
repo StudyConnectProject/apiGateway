@@ -141,7 +141,6 @@ spring:
           predicates:
             - Path=/api/exams/**
           filters:
-            - StripPrefix=1
             - AuthenticationFilter
             - name: CircuitBreaker
               args:
