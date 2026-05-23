@@ -165,7 +165,7 @@ spring:
         - id: matching-service
           uri: ${MATCHING_SERVICE_URL:https://matchingservice.onrender.com}
           predicates:
-            - Path=/api/matching/**
+            - Path=/api/matching, /api/matching/**
           filters:
             - AuthenticationFilter
             - name: CircuitBreaker
