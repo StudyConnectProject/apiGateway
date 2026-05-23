@@ -262,6 +262,11 @@ spring:
               args:
                 name: analyticsServiceCB
                 fallbackUri: forward:/fallback
+                statusCodes:
+                  - 404
+                  - 500
+                  - 502
+                  - 503
 
 # Seguridad JWT
 app:
