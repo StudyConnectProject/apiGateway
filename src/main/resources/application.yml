@@ -168,7 +168,6 @@ spring:
           predicates:
             - Path=/api/matching/**
           filters:
-            - StripPrefix=1
             - AuthenticationFilter
             - name: CircuitBreaker
               args:
